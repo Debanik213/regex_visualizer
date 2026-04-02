@@ -1,0 +1,3 @@
+streamlit==1.32.0
+exrex==0.11.0
+greenery==3.2
