@@ -421,13 +421,33 @@ Max Length
       return result;
     }
 
+    const RESULT_COLORS = [
+      'text-primary-fixed-dim',
+      'text-orange-300',
+      'text-amber-300',
+      'text-yellow-300',
+      'text-lime-300',
+      'text-green-300',
+      'text-emerald-300',
+      'text-teal-300',
+      'text-cyan-300',
+      'text-sky-300',
+      'text-blue-300',
+      'text-indigo-300',
+      'text-violet-300',
+      'text-purple-300',
+      'text-fuchsia-300',
+      'text-pink-300',
+      'text-rose-300'
+    ];
+
     function renderResults(strings) {
       if (strings.length === 0) {
         resultsList.innerHTML = '<li class="text-stone-400">No matches found. Try increasing max length.</li>';
         return;
       }
       resultsList.innerHTML = strings
-        .map((item, idx) => `<li><span class="text-primary-fixed-dim">${idx + 1}.</span> ${escapeHtml(item === '' ? 'ε (empty string)' : item)}</li>`)
+        .map((item, idx) => `<li><span class="${RESULT_COLORS[idx % RESULT_COLORS.length]}">${idx + 1}.</span> ${escapeHtml(item === '' ? 'ε (empty string)' : item)}</li>`)
         .join('');
     }
 
