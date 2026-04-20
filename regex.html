@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MathLab: Regular Languages - Regex Builder</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-primary-fixed": "#331200",
+              "tertiary-fixed-dim": "#e8c426",
+              "on-tertiary-fixed-variant": "#554500",
+              "on-background": "#1d1b17",
+              "secondary-fixed-dim": "#59dbc7",
+              "secondary-container": "#79f7e3",
+              "on-secondary-container": "#005047",
+              "tertiary-container": "#ffe173",
+              "on-error-container": "#93000a",
+              "error": "#ba1a1a",
+              "primary-fixed": "#ffdbc9",
+              "surface-container-low": "#f9f3ec",
+              "primary": "#9b4500",
+              "on-secondary": "#ffffff",
+              "on-secondary-fixed-variant": "#005047",
+              "inverse-on-surface": "#f6f0e9",
+              "surface-tint": "#9b4500",
+              "surface-variant": "#e7e2db",
+              "secondary-fixed": "#79f7e3",
+              "tertiary": "#705d00",
+              "on-tertiary-container": "#554500",
+              "on-tertiary": "#ffffff",
+              "surface-container": "#f3ede6",
+              "inverse-primary": "#ffb68e",
+              "error-container": "#ffdad6",
+              "background": "#fef8f1",
+              "on-surface-variant": "#5c4132",
+              "surface-dim": "#dfd9d2",
+              "outline": "#91705f",
+              "surface-bright": "#fef8f1",
+              "primary-fixed-dim": "#ffb68e",
+              "on-primary-fixed-variant": "#763300",
+              "on-secondary-fixed": "#00201c",
+              "surface-container-lowest": "#ffffff",
+              "primary-container": "#ffdbc9",
+              "on-primary": "#ffffff",
+              "on-primary-container": "#763300",
+              "on-error": "#ffffff",
+              "outline-variant": "#e6beaa",
+              "on-surface": "#1d1b17",
+              "on-tertiary-fixed": "#221b00",
+              "surface-container-highest": "#e7e2db",
+              "inverse-surface": "#32302c",
+              "surface-container-high": "#ede7e0",
+              "tertiary-fixed": "#ffe173",
+              "secondary": "#006b5f",
+              "surface": "#fef8f1"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Plus Jakarta Sans"],
+              "label": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .spotlight-container {
+    position: relative;
+}
+.spotlight-container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: inherit;
+    padding: 2px; /* Border thickness */
+    background: radial-gradient(
+        800px circle at var(--mouse-x, -800px) var(--mouse-y, -800px), 
+        rgba(155, 69, 0, 0.4), /* Primary orange glow */
+        transparent 40%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 10;
+    pointer-events: none;
+}
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fef8f1;
+            cursor: none; /* Let custom cursor takeover */
+        }
+
+        /* Custom Awwwards Cursor */
+        #cursor-dot, #cursor-outline {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0; /* hidden until mousemove */
+        }
+        #cursor-dot {
+            width: 8px; height: 8px;
+            background-color: #9b4500;
+        }
+        #cursor-outline {
+            width: 40px; height: 40px;
+            border: 2px solid rgba(155, 69, 0, 0.4);
+            transition: width 0.2s, height 0.2s, background-color 0.2s, border-width 0.2s;
+        }
+        .cursor-hover #cursor-outline {
+            width: 60px; height: 60px;
+            background-color: rgba(155, 69, 0, 0.1);
+            border-color: rgba(155, 69, 0, 0.6);
+        }
+        a, button, input { cursor: none; }
+
+        /* Awwwards BG Effects */
+        .bg-text-marquee {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 25vw;
+            font-weight: 800;
+            color: transparent;
+            -webkit-text-stroke: 2px rgba(155, 69, 0, 0.03);
+            white-space: nowrap;
+            z-index: -1;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .reveal-element {
+            opacity: 0;
+        }
+
+        /* Subtle Grain Overlay */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.04;
+            z-index: 1000;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen relative overflow-x-hidden">
+
+<!-- Custom Cursor -->
+<div id="cursor-dot"></div>
+<div id="cursor-outline"></div>
+
+<!-- Immersive BG Marquee -->
+<div class="bg-text-marquee">PATTERN MAKER</div>
+
+<!-- SideNavBar -->
+<aside class="hidden md:flex h-screen w-72 rounded-r-[3rem] sticky left-0 top-0 bg-[#fef8f1] dark:bg-stone-950 flex-col py-8 space-y-2 border-r border-transparent shadow-[32px_0_64px_-20px_rgba(29,27,23,0.05)] z-50">
+<div class="px-8 mb-8">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<img alt="Laboratory Assistant" data-alt="close-up of a friendly illustrated robot character with warm golden colors in a minimalist flat style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlQ-yknc1dBkDehHrQ8BOSZhOpw308_0shT1WnS8vLRbxZgzXHMNK3FdFhwLIgeNqxrpdN-kmT7TQ1U_zFLW4jwJ5JUtNpOD6dR-gg48n-yOL3vc2OtCVI8fklkpZu9Mbh5OlRReXa0vFS2zl2BkvFD5TrTf6bIUvbZ1G5SV68kLplrnKB_PbRFzq-guUcL9ap1GASi1yB3Vl4D3ObpI36ifpcXSJh3yC17sfLCSxYnlw3EpP4_aUIMBGsTOvNEhKg9Ntataa5XQ"/>
+</div>
+<div>
+<h2 class="font-headline font-bold text-on-background leading-tight">MathLab</h2>
+<p class="text-xs text-on-surface-variant">Verify &amp; Learn</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-2">
+<!-- Active Tab: Regex Builder -->
+<a class="flex items-center gap-4 bg-[#ffead1] dark:bg-orange-900/30 text-[#9b4500] dark:text-orange-200 rounded-full px-6 py-4 mx-4 shadow-sm translate-x-1 duration-300" href="regex.html">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span class="font-semibold text-sm">Regex Builder</span>
+</a>
+<a class="flex items-center gap-4 text-stone-500 dark:text-stone-400 px-6 py-4 mx-4 hover:bg-[#f5ece0] dark:hover:bg-stone-800 rounded-full transition-all" href="equivalncechecker.html">
+<span class="material-symbols-outlined" data-icon="compare_arrows">compare_arrows</span>
+<span class="font-semibold text-sm">Equivalence Checker</span>
+</a>
+</nav>
+<div class="mt-auto px-4">
+<div class="bg-[#f5ece0] dark:bg-stone-900 h-[1px] w-full mb-4 opacity-50"></div>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar -->
+<header class="w-full top-0 sticky bg-[#fef8f1] dark:bg-stone-950 flex justify-between items-center px-8 py-4 z-40">
+<div class="flex items-center gap-8">
+<h1 class="text-2xl font-bold text-[#9b4500] dark:text-orange-400 tracking-tight">MathLab: Regular Languages</h1>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="font-['Plus_Jakarta_Sans'] text-lg font-medium text-stone-600 dark:text-stone-400 hover:text-[#9b4500] transition-colors duration-200" href="index.html">Theory</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-[#9b4500] hover:bg-primary-container rounded-full transition-all scale-95 active:scale-90">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<button class="p-2 text-[#9b4500] hover:bg-primary-container rounded-full transition-all scale-95 active:scale-90">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<div class="bg-[#f5ece0] dark:bg-stone-900 h-[1px] w-full"></div>
+<!-- Main Content Area -->
+<main class="p-8 md:p-12 lg:p-16 flex flex-col lg:flex-row gap-12 max-w-[1600px] mx-auto w-full">
+<!-- Left Column: THEORY (Notebook Section) -->
+<section class="flex-1 lg:max-w-xl reveal-element">
+<div class="tilt-card bg-surface-container-low rounded-xl p-8 lg:p-12 relative overflow-hidden transform lg:-rotate-1 shadow-sm transition-transform duration-200">
+<!-- Notebook Punch Holes Decoration -->
+<div class="absolute left-4 top-0 bottom-0 flex flex-col justify-around py-8 opacity-20">
+<div class="w-4 h-4 rounded-full bg-on-surface-variant"></div>
+<div class="w-4 h-4 rounded-full bg-on-surface-variant"></div>
+<div class="w-4 h-4 rounded-full bg-on-surface-variant"></div>
+<div class="w-4 h-4 rounded-full bg-on-surface-variant"></div>
+</div>
+<div class="pl-8">
+<header class="mb-10">
+<span class="text-primary font-bold tracking-widest text-xs uppercase">Chapter 01</span>
+<h2 class="text-4xl font-extrabold text-on-background mt-2 mb-4 leading-tight">Understanding Regular Expressions</h2>
+<div class="h-1 w-20 bg-primary rounded-full"></div>
+</header>
+<div class="space-y-8 text-on-surface-variant">
+<p class="text-lg leading-relaxed">The <span class="font-bold text-primary">Regex Builder</span> works by taking a <span class="font-bold text-primary">regular expression</span> as input and using it to <span class="font-bold text-primary">generate</span> a set of matching strings. It’s like creating a unique blueprint for patterns in text.</p>
+<div class="grid grid-cols-1 gap-6">
+<!-- Alphabet Section -->
+<div class="bg-surface-container-highest p-6 rounded-lg border-l-4 border-primary">
+<h3 class="text-xl font-bold text-on-background flex items-center gap-2 mb-2">
+<span class="text-2xl font-serif">Σ</span> The Alphabet
+                                    </h3>
+<p class="text-sm">The set of all possible characters you can use. For example: {a, b}.</p>
+</div>
+<!-- Empty String Section -->
+<div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-secondary">
+<h3 class="text-xl font-bold text-on-background flex items-center gap-2 mb-2">
+<span class="text-2xl font-serif">ε</span> Empty String
+                                    </h3>
+<p class="text-sm">Represents a string with no characters. It's the 'zero' of regular languages.</p>
+</div>
+<!-- Symbols Section -->
+<div class="bg-tertiary-container/30 p-6 rounded-lg border-l-4 border-tertiary">
+<h3 class="text-xl font-bold text-on-background flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-tertiary" data-icon="token">token</span> Operators
+                                    </h3>
+<ul class="text-sm space-y-2 list-disc pl-5">
+<li><span class="font-bold">Union (|):</span> Choice between two patterns.</li>
+<li><span class="font-bold">Star (*):</span> Zero or more repetitions.</li>
+<li><span class="font-bold">Plus (+):</span> One or more repetitions.</li>
+</ul>
+</div>
+<!-- Semantic Operator Palette Section -->
+<div class="bg-primary-container/20 p-6 rounded-lg border-l-4 border-primary/50">
+<h3 class="text-xl font-bold text-on-background flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary" data-icon="list_alt">list_alt</span> Semantic Operator Palette
+                                    </h3>
+<ul class="text-xs space-y-2 font-medium">
+<li class="flex items-start gap-2"><span class="font-bold text-primary min-w-[1.5rem]">*</span> <span class="opacity-80">(Kleene Star): Zero or more occurrences.</span></li>
+<li class="flex items-start gap-2"><span class="font-bold text-primary min-w-[1.5rem]">+</span> <span class="opacity-80">(Kleene Plus): One or more occurrences.</span></li>
+<li class="flex items-start gap-2"><span class="font-bold text-primary min-w-[1.5rem]">?</span> <span class="opacity-80">(Optional): Zero or one occurrence.</span></li>
+<li class="flex items-start gap-2"><span class="font-bold text-primary min-w-[1.5rem]">|</span> <span class="opacity-80">(Union): The logical "OR" operator.</span></li>
+<li class="flex items-start gap-2"><span class="font-bold text-primary min-w-[1.5rem]">( )</span> <span class="opacity-80">(Capture Group): Groups tokens together.</span></li>
+<li class="flex items-start gap-2"><span class="font-bold text-primary min-w-[1.5rem]">[ ]</span> <span class="opacity-80">(Character Class): Matches any single character within.</span></li>
+<li class="flex items-start gap-2"><span class="font-bold text-primary min-w-[1.5rem]">^ / $</span> <span class="opacity-80">(Anchors): Specify start or end of string.</span></li>
+<li class="flex items-start gap-2"><span class="font-bold text-primary min-w-[1.5rem]">ε</span> <span class="opacity-80">(Epsilon): The empty string symbol.</span></li>
+<li class="flex items-start gap-2"><span class="font-bold text-primary min-w-[1.5rem]">Ø</span> <span class="opacity-80">(Empty Set): The null set symbol.</span></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="mt-12 flex justify-end">
+<div class="relative w-full max-w-sm rounded-3xl p-6 bg-gradient-to-br from-[#ffe7c2] via-[#ffd8a8] to-[#ffbe8f] border border-primary/20 shadow-[0_18px_40px_-20px_rgba(155,69,0,0.55)] overflow-hidden">
+<div class="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-white/30 blur-sm animate-pulse"></div>
+<div class="absolute -bottom-10 -left-8 w-28 h-28 rounded-full bg-primary/20"></div>
+<div class="relative flex items-center justify-between">
+<div>
+<p class="text-xs uppercase tracking-widest font-bold text-primary/80">Fun Mode</p>
+<h4 class="text-xl font-extrabold text-[#5b2200] mt-1">Regex Playground</h4>
+</div>
+<div class="w-12 h-12 rounded-2xl bg-white/70 flex items-center justify-center shadow-inner">
+<span class="material-symbols-outlined text-primary" data-icon="celebration">celebration</span>
+</div>
+</div>
+<div class="mt-5 grid grid-cols-5 gap-2 text-center text-sm font-mono">
+<span class="rounded-lg bg-white/70 py-1 text-primary">a*</span>
+<span class="rounded-lg bg-white/70 py-1 text-primary">b+</span>
+<span class="rounded-lg bg-white/70 py-1 text-primary">(ab)</span>
+<span class="rounded-lg bg-white/70 py-1 text-primary">ε</span>
+<span class="rounded-lg bg-white/70 py-1 text-primary">a|b</span>
+</div>
+<p class="mt-4 text-xs text-[#6b2f06] font-semibold">Build patterns, test ideas, and let curiosity drive the logic.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: THE FUNCTION (Construction Palette) -->
+<section class="flex-1 flex flex-col gap-8 reveal-element delay-300">
+<div class="tilt-card bg-white rounded-xl p-8 lg:p-12 shadow-[0_32px_64px_-20px_rgba(155,69,0,0.1)] border border-outline-variant/15 flex flex-col h-full hover:shadow-[0_45px_90px_-20px_rgba(155,69,0,0.15)] transition-all duration-200">
+<h3 class="text-2xl font-bold text-on-background mb-8 flex items-center gap-3">
+<span class="material-symbols-outlined p-2 bg-primary-container text-primary rounded-full" data-icon="architecture">architecture</span>
+                        Construction Palette
+                    </h3>
+<!-- Main Input Field -->
+<div class="mb-12">
+<label class="block text-sm font-bold text-on-surface-variant mb-4 ml-1">Your Expression</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-highest border-0 border-b-4 border-outline-variant px-8 py-8 text-4xl font-mono text-primary rounded-t-lg focus:ring-0 focus:bg-primary-container transition-all focus:border-primary placeholder:opacity-30" id="regexInput" placeholder="(a|b)*abb" type="text"/>
+<div class="absolute right-6 top-1/2 -translate-y-1/2 flex gap-2">
+<button class="p-3 text-on-surface-variant hover:text-primary transition-colors" id="backspaceBtn" title="Delete previous character" type="button">
+<span class="material-symbols-outlined" data-icon="backspace">backspace</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Builder Grid -->
+<div class="grid grid-cols-2 sm:grid-cols-4 flex-1 gap-2">
+<!-- Alphabets -->
+<button class="h-20 flex items-center justify-center bg-surface-container-high hover:bg-surface-container-highest rounded-xl text-2xl font-bold transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-surface-variant" data-insert="a" type="button">a</button>
+<button class="h-20 flex items-center justify-center bg-surface-container-high hover:bg-surface-container-highest rounded-xl text-2xl font-bold transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-surface-variant" data-insert="b" type="button">b</button>
+<button class="h-20 flex items-center justify-center bg-surface-container-high hover:bg-surface-container-highest rounded-xl text-2xl font-bold transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-surface-variant" data-insert="c" type="button">c</button>
+<button class="h-20 flex items-center justify-center bg-tertiary-container/40 hover:bg-tertiary-container rounded-xl text-2xl font-serif font-bold transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-tertiary-fixed-dim" data-insert="ε" type="button">ε</button>
+<!-- Quantifiers -->
+<button class="h-20 flex items-center justify-center bg-primary-container/20 hover:bg-primary-container rounded-xl text-2xl font-bold text-primary transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-primary-fixed-dim" data-insert="*" type="button">*</button>
+<button class="h-20 flex items-center justify-center bg-primary-container/20 hover:bg-primary-container rounded-xl text-2xl font-bold text-primary transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-primary-fixed-dim" data-insert="+" type="button">+</button>
+<button class="h-20 flex items-center justify-center bg-primary-container/20 hover:bg-primary-container rounded-xl text-2xl font-bold text-primary transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-primary-fixed-dim" data-insert="?" type="button">?</button>
+<button class="h-20 flex items-center justify-center bg-secondary-container/20 hover:bg-secondary-container rounded-xl text-2xl font-bold text-secondary transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-secondary-fixed-dim" data-insert="|" type="button">|</button>
+<!-- Grouping -->
+<button class="h-20 flex items-center justify-center bg-surface-container-high hover:bg-surface-container-highest rounded-xl text-2xl font-bold transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-surface-variant" data-insert="(" type="button">(</button>
+<button class="h-20 flex items-center justify-center bg-surface-container-high hover:bg-surface-container-highest rounded-xl text-2xl font-bold transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-surface-variant" data-insert=")" type="button">)</button>
+<button class="h-20 flex items-center justify-center bg-surface-container-high hover:bg-surface-container-highest rounded-xl text-2xl font-bold transition-all hover:scale-105 active:scale-95 shadow-sm border-b-4 border-surface-variant magnetic-btn" data-insert="[]" type="button">[ ]</button>
+<button class="h-20 flex items-center justify-center bg-primary text-on-primary rounded-xl text-xl font-bold transition-all hover:shadow-lg active:scale-95 col-span-1 magnetic-btn" id="generateBtn" type="button">
+<span class="material-symbols-outlined pointer-events-none" data-icon="play_arrow">play_arrow</span>
+</button>
+</div>
+<div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+<label class="text-sm font-semibold text-on-surface-variant">
+Count
+<input class="mt-2 w-full rounded-lg border-outline-variant/40" id="sampleCount" max="50" min="1" type="number" value="12"/>
+</label>
+<label class="text-sm font-semibold text-on-surface-variant">
+Max Length
+<input class="mt-2 w-full rounded-lg border-outline-variant/40" id="maxLength" max="64" min="1" type="number" value="8"/>
+</label>
+<div class="text-xs text-stone-500 sm:text-right" id="statusText">Ready</div>
+</div>
+<!-- Railroad Diagram Panel -->
+<div class="mt-10 rounded-xl overflow-hidden border border-outline-variant/20 shadow-sm" id="railroadPanel">
+  <div class="flex items-center justify-between px-6 py-3 bg-surface-container-low border-b border-outline-variant/20">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary text-lg">account_tree</span>
+      <span class="text-xs font-bold tracking-widest text-primary uppercase">Railroad Diagram</span>
+    </div>
+    <span class="text-xs text-stone-400 font-mono" id="railroadExprLabel"></span>
+  </div>
+  <div class="bg-white px-4 py-6 overflow-x-auto min-h-[120px] flex items-center justify-center" id="railroadContainer">
+    <span class="text-stone-300 text-sm italic">Type an expression above to see its syntax diagram</span>
+  </div>
+</div>
+<!-- Visual Feedback -->
+<div class="mt-6 bg-on-background text-background p-6 rounded-xl shadow-xl">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs font-bold tracking-widest text-primary-fixed opacity-70">GENERATED STRINGS</span>
+<button class="text-xs text-primary-fixed-dim hover:text-white transition-colors" id="copyResultsBtn" type="button">Copy</button>
+</div>
+<ul class="h-32 overflow-y-auto border border-white/10 rounded-lg p-3 space-y-2 text-sm font-mono" id="resultsList"></ul>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating Action Button: Contextual -->
+<button class="fixed bottom-8 right-8 w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-transform z-50 magnetic-btn block">
+<span class="material-symbols-outlined text-3xl pointer-events-none" data-icon="psychology">psychology</span>
+</button>
+</div>
+<!-- BottomNavBar (Mobile only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#fef8f1] dark:bg-stone-950 flex justify-around items-center py-3 px-6 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] border-t border-surface-variant/20 z-50">
+<a class="flex flex-col items-center gap-1 text-[#9b4500]" href="regex.html">
+<span class="material-symbols-outlined text-2xl" data-icon="edit_note" style="font-variation-settings: 'FILL' 1;">edit_note</span>
+<span class="text-[10px] font-bold">Build</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-stone-400" href="equivalncechecker.html">
+<span class="material-symbols-outlined text-2xl" data-icon="rule">rule</span>
+<span class="text-[10px] font-medium">Test</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-stone-400" href="index.html">
+<span class="material-symbols-outlined text-2xl" data-icon="auto_stories">auto_stories</span>
+<span class="text-[10px] font-medium">Learn</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-stone-400" href="index.html">
+<span class="material-symbols-outlined text-2xl" data-icon="account_circle">account_circle</span>
+<span class="text-[10px] font-medium">Me</span>
+</a>
+</nav>
+<script>
+  // --- Awwwards Custom Interface Logic ---
+  document.addEventListener("DOMContentLoaded", () => {
+    // Custom Cursor tracking
+    const cursorDot = document.getElementById('cursor-dot');
+    const cursorOutline = document.getElementById('cursor-outline');
+    let mouseX = 0, mouseY = 0;
+    let outlineX = 0, outlineY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      if (cursorDot.style.opacity == 0 || cursorDot.style.opacity === "") {
+        cursorDot.style.opacity = 1;
+        cursorOutline.style.opacity = 1;
+        outlineX = e.clientX;
+        outlineY = e.clientY;
+      }
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      // immediate follow for the dot
+      cursorDot.style.left = `${mouseX}px`;
+      cursorDot.style.top = `${mouseY}px`;
+    });
+
+    // Spring effect for the outline
+    gsap.ticker.add(() => {
+      outlineX += (mouseX - outlineX) * 0.15;
+      outlineY += (mouseY - outlineY) * 0.15;
+      cursorOutline.style.left = `${outlineX}px`;
+      cursorOutline.style.top = `${outlineY}px`;
+    });
+
+    // Hover states for links & buttons
+    const interactables = document.querySelectorAll('a, button, input');
+    interInteractables = Array.from(interactables);
+    interInteractables.forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+    });
+
+    // Beautiful Intro Animation with GSAP
+    gsap.fromTo('.reveal-element', 
+      { y: 60, opacity: 0 },
+      { y: 0, opacity: 1, duration: 1.2, stagger: 0.2, ease: "power4.out" }
+    );
+
+    // Subtle BG Marquee Infinite Pan
+    gsap.to('.bg-text-marquee', {
+      xPercent: -30,
+      ease: "sine.inOut",
+      duration: 30,
+      repeat: -1,
+      yoyo: true
+    });
+
+    // Magnetic Button Effect
+    const magneticBtns = document.querySelectorAll('.magnetic-btn');
+    magneticBtns.forEach(btn => {
+      btn.addEventListener('mousemove', (e) => {
+        const bounds = btn.getBoundingClientRect();
+        const x = e.clientX - bounds.left - bounds.width / 2;
+        const y = e.clientY - bounds.top - bounds.height / 2;
+        
+        gsap.to(btn, {
+          x: x * 0.4,
+          y: y * 0.4,
+          duration: 0.4,
+          ease: "power3.out"
+        });
+      });
+      
+      btn.addEventListener('mouseleave', () => {
+        gsap.to(btn, {
+          x: 0,
+          y: 0,
+          duration: 0.7,
+          ease: "elastic.out(1, 0.3)"
+        });
+      });
+    });
+
+    // 3D Tilt Cards Effect
+    const tiltCards = document.querySelectorAll('.tilt-card');
+    tiltCards.forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        const rotateX = ((y - centerY) / centerY) * -10; // Max rotation 10deg
+        const rotateY = ((x - centerX) / centerX) * 10;
+        
+        gsap.to(card, {
+          rotateX: rotateX,
+          rotateY: rotateY,
+          transformPerspective: 1000,
+          duration: 0.4,
+          ease: "power2.out"
+        });
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        gsap.to(card, {
+          rotateX: 0,
+          rotateY: 0,
+          duration: 0.7,
+          ease: "power2.out"
+        });
+      });
+    });
+  });
+
+  // ─── Railroad Diagram Engine ────────────────────────────────────────────────
+  // Self-contained: recursive-descent parser → AST → SVG railroad diagram
+  (function () {
+
+    // ── 1. Parser ──────────────────────────────────────────────────────────────
+    // Parses a simplified regex (supports: literals, |, *, +, ?, (), [], ε)
+    // Returns an AST node:
+    //   { type: 'lit',   value }
+    //   { type: 'class', value }        e.g. [a-z]
+    //   { type: 'seq',   items: [] }
+    //   { type: 'alt',   items: [] }
+    //   { type: 'rep',   child, min, max }   max=Infinity means *
+
+    function parse(src) {
+      // normalise: replace math-notation + (union) only when clearly binary
+      // keep + as quantifier when it follows ), ], letter, *, ?, +
+      src = src.replace(/ε/g, '\u0190'); // placeholder
+      const pos = { i: 0 };
+      const ast = parseAlt(src, pos);
+      return ast;
+    }
+
+    function parseAlt(src, pos) {
+      const items = [parseSeq(src, pos)];
+      while (pos.i < src.length && src[pos.i] === '|') {
+        pos.i++;
+        items.push(parseSeq(src, pos));
+      }
+      return items.length === 1 ? items[0] : { type: 'alt', items };
+    }
+
+    function parseSeq(src, pos) {
+      const items = [];
+      while (pos.i < src.length && src[pos.i] !== ')' && src[pos.i] !== '|') {
+        const node = parseAtom(src, pos);
+        if (node) items.push(node);
+        else break;
+      }
+      if (items.length === 0) return { type: 'lit', value: 'ε' };
+      return items.length === 1 ? items[0] : { type: 'seq', items };
+    }
+
+    function parseAtom(src, pos) {
+      if (pos.i >= src.length) return null;
+      let node;
+      const ch = src[pos.i];
+
+      if (ch === '(') {
+        pos.i++;
+        node = parseAlt(src, pos);
+        if (pos.i < src.length && src[pos.i] === ')') pos.i++;
+      } else if (ch === '[') {
+        const start = pos.i;
+        pos.i++; // skip [
+        while (pos.i < src.length && src[pos.i] !== ']') {
+          if (src[pos.i] === '\\') pos.i++;
+          pos.i++;
+        }
+        if (pos.i < src.length) pos.i++; // skip ]
+        node = { type: 'class', value: src.slice(start, pos.i) };
+      } else if (ch === '\\' && pos.i + 1 < src.length) {
+        pos.i += 2;
+        node = { type: 'lit', value: src.slice(pos.i - 2, pos.i) };
+      } else if (ch === '\u0190') {
+        pos.i++;
+        node = { type: 'lit', value: 'ε' };
+      } else if ('*+?|)'.includes(ch)) {
+        return null; // handled by caller
+      } else {
+        pos.i++;
+        node = { type: 'lit', value: ch };
+      }
+
+      // consume quantifier
+      if (pos.i < src.length) {
+        const q = src[pos.i];
+        if (q === '*') { pos.i++; node = { type: 'rep', child: node, min: 0, max: Infinity }; }
+        else if (q === '+') { pos.i++; node = { type: 'rep', child: node, min: 1, max: Infinity }; }
+        else if (q === '?') { pos.i++; node = { type: 'rep', child: node, min: 0, max: 1 }; }
+      }
+      return node;
+    }
+
+    // ── 2. Layout ──────────────────────────────────────────────────────────────
+    // Each node returns a { width, height, centerY } measurement.
+    // Then we draw SVG paths and shapes.
+
+    const R  = 10;   // rail radius / corner radius
+    const PAD = 14;  // horizontal padding inside boxes
+    const VPAD = 8;  // vertical padding inside boxes
+    const GAP = 18;  // horizontal gap between elements
+    const VGAP = 20; // vertical gap between alt branches
+    const FONT_SIZE = 13;
+    const CHAR_W = 7.8; // approx char width at FONT_SIZE
+
+    const C = { // colors (match the site palette)
+      rail:   '#9b4500',
+      term:   '#ffdbc9',
+      termBorder: '#9b4500',
+      termText: '#763300',
+      op:     '#79f7e3',
+      opBorder: '#006b5f',
+      opText: '#005047',
+      arrow:  '#9b4500',
+      loop:   '#b85a00',
+      bg:     '#fef8f1',
+    };
+
+    function measureText(str) {
+      return str.length * CHAR_W + PAD * 2;
+    }
+
+    // Returns { w, h, cy } — the bounding box and rail center y
+    function measure(node) {
+      if (!node) return { w: 40, h: 30, cy: 15 };
+      switch (node.type) {
+        case 'lit':
+        case 'class': {
+          const tw = Math.max(measureText(node.value), 40);
+          const th = FONT_SIZE + VPAD * 2;
+          return { w: tw, h: th, cy: th / 2 };
+        }
+        case 'seq': {
+          let w = GAP;
+          let maxAbove = 0, maxBelow = 0;
+          for (const c of node.items) {
+            const m = measure(c);
+            w += m.w + GAP;
+            maxAbove = Math.max(maxAbove, m.cy);
+            maxBelow = Math.max(maxBelow, m.h - m.cy);
+          }
+          const h = maxAbove + maxBelow;
+          return { w, h, cy: maxAbove };
+        }
+        case 'alt': {
+          let w = 0;
+          let totalH = 0;
+          for (let i = 0; i < node.items.length; i++) {
+            const m = measure(node.items[i]);
+            w = Math.max(w, m.w);
+            totalH += m.h + (i > 0 ? VGAP : 0);
+          }
+          const first = measure(node.items[0]);
+          // cy = center of first branch + leading from top
+          return { w: w + GAP * 4, h: totalH, cy: first.cy };
+        }
+        case 'rep': {
+          const cm = measure(node.child);
+          const loopH = R * 2 + 8; // loop track below
+          const w = cm.w + GAP * 4;
+          const h = cm.h + loopH;
+          return { w, h, cy: cm.cy };
+        }
+        default:
+          return { w: 40, h: 30, cy: 15 };
+      }
+    }
+
+    // ── 3. Draw ────────────────────────────────────────────────────────────────
+    // draw(node, x, y_center) → SVG string
+    // x is the left edge; y is the rail line y coordinate
+
+    function draw(node, x, cy) {
+      if (!node) return '';
+      const m = measure(node);
+
+      switch (node.type) {
+        case 'lit':
+        case 'class': {
+          const bx = x, by = cy - m.h / 2;
+          const bw = m.w, bh = m.h;
+          const isClass = node.type === 'class';
+          const fill = isClass ? C.op : C.term;
+          const stroke = isClass ? C.opBorder : C.termBorder;
+          const tc = isClass ? C.opText : C.termText;
+          const rx = isClass ? 4 : bh / 2; // rounded rect or pill
+          return `
+            <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${rx}" ry="${rx}"
+              fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+            <text x="${bx + bw/2}" y="${cy + FONT_SIZE*0.38}" text-anchor="middle"
+              font-family="ui-monospace,monospace" font-size="${FONT_SIZE}" fill="${tc}" font-weight="600">${escSvg(node.value)}</text>
+          `;
+        }
+
+        case 'seq': {
+          let svg = '';
+          let cx = x + GAP;
+          const firstM = measure(node.items[0]);
+          // draw rail from x to first item
+          svg += railLine(x, cy, cx, cy);
+
+          for (let i = 0; i < node.items.length; i++) {
+            const item = node.items[i];
+            const im = measure(item);
+            const icy = cy - im.cy + im.cy; // keep on rail
+            svg += draw(item, cx, cy);
+            cx += im.w;
+            if (i < node.items.length - 1) {
+              svg += railLine(cx, cy, cx + GAP, cy);
+              cx += GAP;
+            }
+          }
+          // final rail to right edge
+          svg += railLine(cx, cy, x + m.w, cy);
+          return svg;
+        }
+
+        case 'alt': {
+          let svg = '';
+          const innerW = m.w - GAP * 4;
+          const lx = x + GAP * 2;   // left junction x
+          const rx2 = lx + innerW;  // right junction x
+          let branchY = cy;
+
+          for (let i = 0; i < node.items.length; i++) {
+            const item = node.items[i];
+            const im = measure(item);
+            const bcy = branchY + im.cy;
+
+            // horizontal connectors to/from branch
+            svg += railLine(lx, bcy, lx + (innerW - im.w) / 2, bcy);
+            svg += draw(item, lx + (innerW - im.w) / 2, bcy);
+            svg += railLine(lx + (innerW - im.w) / 2 + im.w, bcy, rx2, bcy);
+
+            // vertical spines (arcs on first/last)
+            if (i === 0) {
+              // entry: straight
+              svg += railLine(x, cy, lx, cy);
+              svg += railLine(rx2, cy, x + m.w, cy);
+            } else {
+              // draw arc from cy down to bcy on left spine
+              svg += svgArc(lx, cy, lx, bcy, 'left-down');
+              svg += svgArc(rx2, cy, rx2, bcy, 'right-down');
+            }
+
+            branchY += im.h + VGAP;
+          }
+          return svg;
+        }
+
+        case 'rep': {
+          const cm = measure(node.child);
+          const innerX = x + GAP * 2;
+          const childW = cm.w;
+          const loopY = cy + cm.h - cm.cy + R + 4; // below child
+          const quantLabel = node.min === 0 && node.max === Infinity ? '*'
+            : node.min === 1 && node.max === Infinity ? '+'
+            : '?';
+
+          let svg = '';
+          // forward rail
+          svg += railLine(x, cy, innerX, cy);
+          svg += draw(node.child, innerX, cy);
+          svg += railLine(innerX + childW, cy, x + m.w, cy);
+
+          // loop-back arc (below)
+          const lx1 = innerX;
+          const lx2 = innerX + childW;
+          // down from cy to loopY on right, then left, up on left
+          svg += `
+            <path d="M${lx2},${cy} Q${lx2+R},${cy} ${lx2+R},${cy+R} L${lx2+R},${loopY-R} Q${lx2+R},${loopY} ${lx2},${loopY}"
+              fill="none" stroke="${C.loop}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>
+            <path d="M${lx1},${loopY} Q${lx1-R},${loopY} ${lx1-R},${loopY-R} L${lx1-R},${cy+R} Q${lx1-R},${cy} ${lx1},${cy}"
+              fill="none" stroke="${C.loop}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>
+            <line x1="${lx1}" y1="${loopY}" x2="${lx2}" y2="${loopY}" stroke="${C.loop}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>
+            <text x="${(lx1+lx2)/2}" y="${loopY+11}" text-anchor="middle"
+              font-size="10" fill="${C.loop}" font-family="ui-monospace,monospace" opacity="0.85">${quantLabel}</text>
+          `;
+          // skip-over arc for * and ?
+          if (node.min === 0) {
+            svg += `
+              <path d="M${x},${cy} Q${x},${cy-R*2} ${x+m.w/2},${cy-R*2} Q${x+m.w},${cy-R*2} ${x+m.w},${cy}"
+                fill="none" stroke="${C.loop}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.55"/>
+            `;
+          }
+          return svg;
+        }
+
+        default:
+          return '';
+      }
+    }
+
+    function railLine(x1, y1, x2, y2) {
+      if (Math.abs(x1 - x2) < 0.5 && Math.abs(y1 - y2) < 0.5) return '';
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C.rail}" stroke-width="2"/>`;
+    }
+
+    function svgArc(x1, y1, x2, y2, dir) {
+      if (Math.abs(y1 - y2) < 1) return railLine(x1, y1, x2, y2);
+      // simple vertical line as fallback
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C.rail}" stroke-width="1.5" opacity="0.6"/>`;
+    }
+
+    function escSvg(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── 4. Entry point ─────────────────────────────────────────────────────────
+    const container = document.getElementById('railroadContainer');
+    const exprLabel = document.getElementById('railroadExprLabel');
+
+    function renderRailroad(rawPattern) {
+      if (!rawPattern.trim()) {
+        container.innerHTML = '<span class="text-stone-300 text-sm italic">Type an expression above to see its syntax diagram</span>';
+        exprLabel.textContent = '';
+        return;
+      }
+
+      exprLabel.textContent = rawPattern;
+
+      let ast;
+      try {
+        ast = parse(rawPattern);
+      } catch (e) {
+        container.innerHTML = `<span class="text-red-400 text-sm italic">Could not parse expression</span>`;
+        return;
+      }
+
+      const PAD_SVG = 20;
+      const m = measure(ast);
+      // Add start/end terminals width
+      const startW = 20, endW = 20;
+      const totalW = m.w + startW + endW + PAD_SVG * 2;
+      const totalH = m.h + PAD_SVG * 2 + 30; // extra for loops
+      const railY = PAD_SVG + m.cy + 15;
+
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalW} ${totalH}"
+        width="${Math.min(totalW, 900)}" height="${totalH}" style="max-width:100%;display:block;margin:auto">
+        <style>text{font-family:'Plus Jakarta Sans',ui-monospace,monospace;}</style>
+      `;
+
+      // START terminal (filled circle)
+      svg += `<circle cx="${PAD_SVG + 8}" cy="${railY}" r="7" fill="${C.rail}"/>`;
+      svg += railLine(PAD_SVG + 15, railY, PAD_SVG + startW, railY);
+
+      // Main diagram
+      svg += draw(ast, PAD_SVG + startW, railY);
+
+      // END terminal (double circle)
+      const ex = PAD_SVG + startW + m.w;
+      svg += railLine(ex, railY, ex + 5, railY);
+      svg += `<circle cx="${ex + 13}" cy="${railY}" r="7" fill="${C.rail}"/>`;
+      svg += `<circle cx="${ex + 13}" cy="${railY}" r="4" fill="white"/>`;
+
+      svg += '</svg>';
+
+      container.innerHTML = svg;
+    }
+
+    // Expose to main script
+    window.renderRailroad = renderRailroad;
+  })();
+
+  // --- Real Logic ---
+  (function () {
+    const regexInput = document.getElementById('regexInput');
+    const backspaceBtn = document.getElementById('backspaceBtn');
+    const generateBtn = document.getElementById('generateBtn');
+    const sampleCount = document.getElementById('sampleCount');
+    const maxLength = document.getElementById('maxLength');
+    const statusText = document.getElementById('statusText');
+    const resultsList = document.getElementById('resultsList');
+    const copyResultsBtn = document.getElementById('copyResultsBtn');
+    const insertButtons = document.querySelectorAll('[data-insert]');
+
+    function setStatus(message) {
+      statusText.textContent = message;
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    }
+
+    function normalizePattern(pattern) {
+      return pattern.replaceAll('ε', '');
+    }
+
+    function insertAtCursor(text) {
+      const start = regexInput.selectionStart ?? regexInput.value.length;
+      const end = regexInput.selectionEnd ?? regexInput.value.length;
+      const before = regexInput.value.slice(0, start);
+      const after = regexInput.value.slice(end);
+      regexInput.value = before + text + after;
+      const cursor = start + text.length;
+      regexInput.setSelectionRange(cursor, cursor);
+      regexInput.focus();
+    }
+
+    function backspaceAtCursor() {
+      const start = regexInput.selectionStart ?? 0;
+      const end = regexInput.selectionEnd ?? 0;
+      if (start !== end) {
+        insertAtCursor('');
+        return;
+      }
+      if (start === 0) return;
+      regexInput.value = regexInput.value.slice(0, start - 1) + regexInput.value.slice(end);
+      regexInput.setSelectionRange(start - 1, start - 1);
+      regexInput.focus();
+    }
+
+    function deriveAlphabet(pattern) {
+      const chars = new Set();
+
+      const classMatches = pattern.match(/\[(?:\\.|[^\]])+\]/g) || [];
+      for (const cls of classMatches) {
+        const body = cls.slice(1, -1);
+        for (let i = 0; i < body.length; i++) {
+          const current = body[i];
+          if (current === '\\') {
+            i += 1;
+            const token = body[i] || '';
+            if (token === 'd') '0123456789'.split('').forEach((c) => chars.add(c));
+            else if (token === 'w') 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'.split('').forEach((c) => chars.add(c));
+            else if (token === 's') [' ', '\\t'].forEach((c) => chars.add(c));
+            else if (token) chars.add(token);
+            continue;
+          }
+
+          if (i + 2 < body.length && body[i + 1] === '-') {
+            const end = body[i + 2];
+            const startCode = current.charCodeAt(0);
+            const endCode = end.charCodeAt(0);
+            if (startCode <= endCode && endCode - startCode < 64) {
+              for (let code = startCode; code <= endCode; code++) {
+                chars.add(String.fromCharCode(code));
+              }
+            }
+            i += 2;
+            continue;
+          }
+
+          chars.add(current);
+        }
+      }
+
+      const literalMatches = pattern.match(/\\.|[^\\\[\]\(\)\{\}\*\+\?\|\^\$\.]/g) || [];
+      for (const token of literalMatches) {
+        if (token.length === 2 && token.startsWith('\\')) {
+          const escaped = token[1];
+          if (escaped === 'd') '0123456789'.split('').forEach((c) => chars.add(c));
+          else if (escaped === 'w') 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'.split('').forEach((c) => chars.add(c));
+          else if (escaped === 's') [' ', '\\t'].forEach((c) => chars.add(c));
+          else chars.add(escaped);
+        } else {
+          chars.add(token);
+        }
+      }
+
+      if (chars.size === 0) {
+        'abc0123'.split('').forEach((c) => chars.add(c));
+      }
+
+      return [...chars];
+    }
+
+    function randomString(alphabet, maxLen) {
+      const length = Math.floor(Math.random() * (maxLen + 1));
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += alphabet[Math.floor(Math.random() * alphabet.length)];
+      }
+      return result;
+    }
+
+    function renderResults(strings) {
+      if (strings.length === 0) {
+        resultsList.innerHTML = '<li class="text-stone-400">No matches found. Try increasing max length.</li>';
+        return;
+      }
+      resultsList.innerHTML = strings
+        .map((item, idx) => `<li><span class="text-primary-fixed-dim">${idx + 1}.</span> ${escapeHtml(item === '' ? 'ε (empty string)' : item)}</li>`)
+        .join('');
+    }
+
+    function buildGenerator() {
+      const rawPattern = regexInput.value.trim();
+      if (window.renderRailroad) window.renderRailroad(rawPattern);
+      const desiredCount = Math.max(1, Math.min(50, Number(sampleCount.value) || 12));
+      const maxLen = Math.max(1, Math.min(64, Number(maxLength.value) || 8));
+      sampleCount.value = String(desiredCount);
+      maxLength.value = String(maxLen);
+
+      if (!rawPattern) {
+        setStatus('Enter a regex to generate samples.');
+        renderResults([]);
+        return;
+      }
+
+      const normalized = normalizePattern(rawPattern);
+      let compiled;
+      try {
+        compiled = new RegExp(`^(?:${normalized})$`);
+      } catch (error) {
+        setStatus(`Invalid regex: ${error.message}`);
+        renderResults([]);
+        return;
+      }
+
+      const alphabet = deriveAlphabet(normalized);
+      const matches = new Set();
+
+      if (compiled.test('')) {
+        matches.add('');
+      }
+
+      const maxAttempts = Math.max(2000, desiredCount * 500);
+      for (let i = 0; i < maxAttempts && matches.size < desiredCount; i++) {
+        const candidate = randomString(alphabet, maxLen);
+        if (compiled.test(candidate)) {
+          matches.add(candidate);
+        }
+      }
+
+      const output = [...matches].slice(0, desiredCount);
+      renderResults(output);
+      setStatus(`Generated ${output.length}/${desiredCount} samples.`);
+    }
+
+    insertButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        insertAtCursor(btn.dataset.insert || '');
+        if (window.renderRailroad) window.renderRailroad(regexInput.value.trim());
+      });
+    });
+
+    backspaceBtn.addEventListener('click', () => {
+      backspaceAtCursor();
+      if (window.renderRailroad) window.renderRailroad(regexInput.value.trim());
+    });
+    generateBtn.addEventListener('click', buildGenerator);
+    regexInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        buildGenerator();
+      }
+    });
+
+    // Real-time railroad update as user types
+    regexInput.addEventListener('input', () => {
+      if (window.renderRailroad) window.renderRailroad(regexInput.value.trim());
+    });
+
+    copyResultsBtn.addEventListener('click', async () => {
+      const lines = [...resultsList.querySelectorAll('li')].map((node) => node.textContent.replace(/^\d+\.\s*/, ''));
+      if (!lines.length) {
+        setStatus('Nothing to copy yet.');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(lines.join('\n'));
+        setStatus('Copied samples to clipboard.');
+      } catch (_) {
+        setStatus('Clipboard blocked by browser.');
+      }
+    });
+
+    buildGenerator();
+    // Initial railroad render
+    setTimeout(() => { if (window.renderRailroad) window.renderRailroad(regexInput.value.trim()); }, 50);
+  })();
+</script>
+</body></html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>MathLab - Theoretical Foundations of Regular Languages</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    darkMode:"class",
+    theme:{extend:{
+      colors:{
+        "surface-container-low":"#f9f3ec","on-surface-variant":"#5c4132",
+        "surface-container-high":"#ede7e0","outline-variant":"#e6beaa",
+        "on-primary-container":"#763300","surface-container-highest":"#e7e2db",
+        "primary-container":"#ffdbc9","primary-fixed-dim":"#ffb68e",
+        "secondary-container":"#79f7e3","on-secondary-container":"#005047",
+        "on-secondary":"#ffffff","tertiary-container":"#ffe173",
+        "on-tertiary-container":"#554500","error-container":"#ffdad6",
+        "error":"#ba1a1a","on-background":"#1d1b17","on-surface":"#1d1b17",
+        "primary":"#9b4500","background":"#fef8f1",
+        "surface-container-lowest":"#ffffff","on-primary":"#ffffff",
+        "secondary":"#006b5f","tertiary":"#705d00","surface-variant":"#e7e2db",
+        "surface":"#fef8f1","on-error":"#ffffff","surface-container":"#f3ede6",
+        "primary-fixed":"#ffdbc9"
+      },
+      fontFamily:{"headline":["Plus Jakarta Sans"],"body":["Plus Jakarta Sans"]},
+      borderRadius:{"DEFAULT":"1rem","lg":"2rem","xl":"3rem","full":"9999px"},
+    }}
+  }
+</script>
+<style>
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+  *{box-sizing:border-box}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:#fef8f1;color:#1d1b17;cursor:none;overflow-x:hidden}
+  /* CURSOR */
+  #cursor-dot,#cursor-outline{position:fixed;border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);opacity:0}
+  #cursor-dot{width:8px;height:8px;background:#9b4500;transition:opacity .3s}
+  #cursor-outline{width:40px;height:40px;border:2px solid rgba(155,69,0,.4);transition:width .2s,height .2s,background .2s,border-color .2s,opacity .3s}
+  .cursor-hover #cursor-outline{width:64px;height:64px;background:rgba(155,69,0,.08);border-color:rgba(155,69,0,.6)}
+  a,button,input{cursor:none}
+  /* NOISE */
+  body::after{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");opacity:.035;z-index:9999;pointer-events:none}
+  /* BG MARQUEE */
+  .bg-marquee{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:28vw;font-weight:800;color:transparent;-webkit-text-stroke:1.5px rgba(155,69,0,.025);white-space:nowrap;z-index:-1;pointer-events:none;user-select:none}
+  /* REVEAL */
+  .reveal{opacity:0;transform:translateY(50px)}
+  /* FLOATING ORB */
+  .orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;animation:float-orb 10s ease-in-out infinite}
+  @keyframes float-orb{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-24px) scale(1.06)}}
+  /* MARQUEE STRIP */
+  .marquee-track{display:flex;width:max-content;animation:mscroll 22s linear infinite}
+  @keyframes mscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  /* GLASS */
+  .glass{background:rgba(254,248,241,.75);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(155,69,0,.1)}
+  /* READING PROGRESS */
+  #rdprog{position:fixed;top:0;left:0;height:3px;background:linear-gradient(to right,#9b4500,#ffb68e);z-index:99999;width:0%;transition:width .1s}
+  /* DEFINITION CARD HOVER */
+  .def-card{transition:transform .3s cubic-bezier(.4,0,.2,1),box-shadow .3s}
+  .def-card:hover{transform:translateY(-6px);box-shadow:0 24px 48px -12px rgba(155,69,0,.16)}
+  /* SECTION NUM */
+  .s-num{position:absolute;right:0;top:-1.5rem;font-size:7rem;font-weight:800;color:transparent;-webkit-text-stroke:1px rgba(155,69,0,.06);line-height:1;pointer-events:none;user-select:none}
+  /* STAT */
+  .stat-num{font-size:clamp(3rem,7vw,6rem);font-weight:800;line-height:1;letter-spacing:-0.04em;background:linear-gradient(135deg,#9b4500,#ffb68e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  /* THEOREM */
+  .theorem::before{content:'"';position:absolute;top:-1rem;left:1rem;font-size:8rem;font-weight:900;color:rgba(155,69,0,.06);line-height:1;pointer-events:none}
+  /* UNDERLINE HOVER */
+  .ul-hover{position:relative}
+  .ul-hover::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:2px;background:#9b4500;transition:width .3s cubic-bezier(.4,0,.2,1)}
+  .ul-hover:hover::after{width:100%}
+  /* TOC ACTIVE */
+  .toc-a.active{color:#9b4500;font-weight:700}
+  .toc-a.active .toc-dot{background:#9b4500}
+  /* HEADER SCROLL */
+  header.scrolled{background:rgba(254,248,241,.88)!important;backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(155,69,0,.08)}
+  /* STEP CARD */
+  .step-card{transition:transform .25s,box-shadow .25s,border-color .25s}
+  .step-card:hover{transform:translateY(-3px);box-shadow:0 16px 32px -8px rgba(155,69,0,.12)}
+  /* SCROLL HINT */
+  @keyframes bounce-d{0%,100%{transform:translateY(0);opacity:1}50%{transform:translateY(8px);opacity:.4}}
+  .scroll-hint{animation:bounce-d 2s ease-in-out infinite}
+  /* HERO 3D OBJECT */
+  .hero-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:2rem;align-items:center}
+  .hero-3d-wrap{display:flex;justify-content:center;align-items:center;perspective:1200px;min-height:360px}
+  .hero-3d-tilt{position:relative;width:min(84vw,340px);aspect-ratio:1/1;transform-style:preserve-3d;transform:rotateX(-16deg) rotateY(24deg);transition:transform .35s ease}
+  .math-cube{position:absolute;inset:23%;transform-style:preserve-3d;animation:spin-cube 24s linear infinite}
+  .cube-face{position:absolute;inset:0;border-radius:16px;border:1px solid rgba(155,69,0,.22);background:linear-gradient(145deg,rgba(255,255,255,.72),rgba(255,182,142,.26));display:flex;align-items:center;justify-content:center;font-size:2.25rem;font-weight:800;color:#9b4500;box-shadow:0 20px 35px -24px rgba(155,69,0,.35);backdrop-filter:blur(2px)}
+  .cube-front{transform:translateZ(64px)}
+  .cube-back{transform:rotateY(180deg) translateZ(64px)}
+  .cube-right{transform:rotateY(90deg) translateZ(64px)}
+  .cube-left{transform:rotateY(-90deg) translateZ(64px)}
+  .cube-top{transform:rotateX(90deg) translateZ(64px)}
+  .cube-bottom{transform:rotateX(-90deg) translateZ(64px)}
+  .math-ring{position:absolute;inset:8%;border-radius:50%;border:1.5px dashed rgba(155,69,0,.25);transform-style:preserve-3d}
+  .ring-a{transform:rotateY(76deg) rotateX(8deg);animation:ring-spin-a 18s linear infinite}
+  .ring-b{inset:2%;border-color:rgba(0,107,95,.25);transform:rotateX(75deg) rotateZ(6deg);animation:ring-spin-b 22s linear infinite reverse}
+  .ring-c{inset:16%;border-style:solid;border-color:rgba(112,93,0,.22);transform:rotateZ(36deg) translateZ(24px);animation:ring-pulse 5.5s ease-in-out infinite}
+  .math-chip{position:absolute;padding:.35rem .7rem;border-radius:999px;font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:rgba(254,248,241,.88);border:1px solid rgba(155,69,0,.2);color:#9b4500;box-shadow:0 12px 22px -18px rgba(155,69,0,.42)}
+  .chip-a{top:10%;right:2%;animation:chip-float 7.4s ease-in-out infinite}
+  .chip-b{left:0%;bottom:13%;color:#005047;border-color:rgba(0,107,95,.28);animation:chip-float 8.2s ease-in-out infinite reverse}
+  .chip-c{right:14%;bottom:2%;color:#554500;border-color:rgba(112,93,0,.28);animation:chip-float 6.9s ease-in-out infinite}
+  .math-node{position:absolute;width:12px;height:12px;border-radius:50%;background:#ffb68e;box-shadow:0 0 0 8px rgba(255,182,142,.18)}
+  .node-a{top:16%;left:20%;animation:node-float 6.8s ease-in-out infinite}
+  .node-b{right:18%;bottom:15%;background:#79f7e3;box-shadow:0 0 0 8px rgba(121,247,227,.22);animation:node-float 7.3s ease-in-out infinite reverse}
+  .node-c{top:50%;right:5%;width:10px;height:10px;background:#ffe173;box-shadow:0 0 0 8px rgba(255,225,115,.18);animation:node-float 6.1s ease-in-out infinite}
+  @keyframes spin-cube{from{transform:rotateX(0deg) rotateY(0deg)}to{transform:rotateX(360deg) rotateY(360deg)}}
+  @keyframes ring-spin-a{from{transform:rotateY(76deg) rotateX(8deg) rotateZ(0deg)}to{transform:rotateY(76deg) rotateX(8deg) rotateZ(360deg)}}
+  @keyframes ring-spin-b{from{transform:rotateX(75deg) rotateZ(6deg) rotateY(0deg)}to{transform:rotateX(75deg) rotateZ(6deg) rotateY(360deg)}}
+  @keyframes ring-pulse{0%,100%{opacity:.45;transform:rotateZ(36deg) translateZ(24px) scale(1)}50%{opacity:.9;transform:rotateZ(36deg) translateZ(24px) scale(1.05)}}
+  @keyframes chip-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  @keyframes node-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  @media (max-width: 1024px){
+    .hero-grid{grid-template-columns:1fr;gap:1.5rem}
+    .hero-3d-wrap{min-height:300px}
+    .hero-3d-tilt{width:min(90vw,300px)}
+  }
+  code{font-family:'ui-monospace',monospace;font-weight:600;color:#9b4500;background:rgba(155,69,0,.06);padding:2px 6px;border-radius:6px}
+</style>
+</head>
+<body class="bg-background text-on-surface relative" data-mode="connect">
+
+<div id="rdprog"></div>
+<div id="cursor-dot"></div>
+<div id="cursor-outline"></div>
+<div class="bg-marquee">FOUNDATIONS</div>
+
+<!-- Orbs -->
+<div class="orb w-80 h-80 bg-orange-200/25" style="top:8vh;right:-4vw;animation-delay:0s;z-index:-1"></div>
+<div class="orb w-56 h-56 bg-yellow-100/30" style="top:55vh;left:-4vw;animation-delay:3s;z-index:-1"></div>
+<div class="orb w-40 h-40 bg-teal-100/25" style="top:82vh;right:8vw;animation-delay:5.5s;z-index:-1"></div>
+
+<!-- ─── HEADER ──────────────────────────────────────── -->
+<header id="hdr" class="w-full top-0 sticky z-50 transition-all duration-300" style="background:#fef8f1">
+  <div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+    <a href="index.html" class="flex items-center gap-3 group">
+      <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-black transition-transform group-hover:rotate-12 duration-300">M</div>
+      <span class="text-xl font-bold text-primary tracking-tight">MathLab</span>
+    </a>
+    <nav class="hidden md:flex gap-8 items-center font-medium">
+      <a class="ul-hover text-stone-500 hover:text-primary transition-colors duration-200" href="regex.html">Laboratory</a>
+      <a class="ul-hover text-primary font-bold" href="index.html">Theory</a>
+      <a class="ul-hover text-stone-500 hover:text-primary transition-colors duration-200" href="equivalncechecker.html">Equivalence</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <button class="w-9 h-9 rounded-full flex items-center justify-center text-stone-400 hover:text-primary hover:bg-primary-container/40 transition-all">
+        <span class="material-symbols-outlined" style="font-size:20px">help</span>
+      </button>
+      <button class="w-9 h-9 rounded-full flex items-center justify-center text-stone-400 hover:text-primary hover:bg-primary-container/40 transition-all">
+        <span class="material-symbols-outlined" style="font-size:20px">account_circle</span>
+      </button>
+    </div>
+  </div>
+  <div style="height:1px;background:rgba(155,69,0,.08)"></div>
+</header>
+
+<!-- ─── HERO ─────────────────────────────────────────── -->
+<section class="relative px-8 pt-20 pb-12 md:px-16 max-w-screen-2xl mx-auto overflow-hidden">
+  <div class="hero-grid mb-8">
+    <div>
+      <div class="reveal">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/10 text-secondary text-xs font-bold tracking-widest uppercase mb-6">
+          <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+          Theoretical Unit 1.0
+        </span>
+      </div>
+      <div class="reveal">
+        <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight leading-none mb-6 max-w-5xl">
+          Theoretical<br>
+          <span style="background:linear-gradient(135deg,#9b4500 0%,#d4621a 50%,#ffb68e 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Foundations</span>
+        </h1>
+        <p class="text-xl text-stone-500 leading-relaxed max-w-2xl mb-12">
+          A comprehensive guide to mathematical structures defining regular languages — from basic alphabets to complex state machine isomorphism.
+        </p>
+      </div>
+    </div>
+    <div class="hero-3d-wrap reveal" aria-hidden="true">
+      <div class="hero-3d-tilt">
+        <div class="math-ring ring-a"></div>
+        <div class="math-ring ring-b"></div>
+        <div class="math-ring ring-c"></div>
+        <div class="math-chip chip-a">NFA to DFA</div>
+        <div class="math-chip chip-b">Min DFA</div>
+        <div class="math-chip chip-c">Regex</div>
+        <div class="math-node node-a"></div>
+        <div class="math-node node-b"></div>
+        <div class="math-node node-c"></div>
+        <div class="math-cube">
+          <div class="cube-face cube-front">q0</div>
+          <div class="cube-face cube-back">δ</div>
+          <div class="cube-face cube-right">Σ</div>
+          <div class="cube-face cube-left">F</div>
+          <div class="cube-face cube-top">ε</div>
+          <div class="cube-face cube-bottom">Q</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="reveal flex flex-wrap gap-12 border-t border-b border-outline-variant/20 py-8 mb-12">
+    <div>
+      <div class="stat-num" data-count="5">5</div>
+      <div class="text-xs font-bold text-stone-400 mt-1 uppercase tracking-widest">Core Modules</div>
+    </div>
+    <div>
+      <div class="stat-num" data-count="4">4</div>
+      <div class="text-xs font-bold text-stone-400 mt-1 uppercase tracking-widest">Algorithm Phases</div>
+    </div>
+    <div>
+      <div class="stat-num">∞</div>
+      <div class="text-xs font-bold text-stone-400 mt-1 uppercase tracking-widest">Possible Strings</div>
+    </div>
+  </div>
+
+  <div class="reveal flex items-center gap-3 text-stone-400">
+    <span class="material-symbols-outlined scroll-hint" style="font-size:18px">arrow_downward</span>
+    <span class="text-xs font-bold tracking-widest uppercase">Scroll to explore</span>
+  </div>
+</section>
+
+<!-- ─── MARQUEE STRIP ─────────────────────────────────── -->
+<div class="overflow-hidden py-4 border-y border-outline-variant/20 bg-surface-container-low">
+  <div class="marquee-track">
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">Regular Expressions</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">Finite Automata</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">Kleene's Theorem</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">DFA Minimization</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">Pumping Lemma</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">Hopcroft's Algorithm</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">Regular Expressions</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">Finite Automata</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">Kleene's Theorem</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">DFA Minimization</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">Pumping Lemma</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+    <span class="text-xs font-bold tracking-widest text-stone-400 uppercase px-10">Hopcroft's Algorithm</span>
+    <span class="text-primary px-6 font-bold">◆</span>
+  </div>
+</div>
+
+<!-- ─── MAIN ──────────────────────────────────────────── -->
+<main class="px-8 py-20 md:px-16 max-w-screen-2xl mx-auto">
+  <div class="flex gap-16 items-start">
+    <div class="flex-1 max-w-3xl space-y-32">
+
+      <!-- 1. Preliminaries -->
+      <section id="preliminaries" class="scroll-mt-24 reveal relative">
+        <div class="s-num">01</div>
+        <div class="flex items-center gap-3 mb-8">
+          <div class="h-1 w-10 bg-primary rounded-full"></div>
+          <span class="text-xs font-bold text-primary tracking-widest uppercase">Chapter One</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-8 leading-tight">Preliminaries: Alphabets,<br>Strings &amp; Languages</h2>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="def-card bg-white rounded-2xl p-6 border border-outline-variant/20 shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined text-primary" style="font-size:20px">translate</span>
+            </div>
+            <h3 class="font-bold text-base mb-2">Alphabet <span class="text-primary font-mono">(Σ)</span></h3>
+            <p class="text-sm text-stone-500 leading-relaxed">A finite, non-empty set of symbols. Building blocks of all possible strings in the domain.</p>
+          </div>
+          <div class="def-card bg-white rounded-2xl p-6 border border-outline-variant/20 shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined text-secondary" style="font-size:20px">reorder</span>
+            </div>
+            <h3 class="font-bold text-base mb-2">String <span class="text-primary font-mono">(w)</span></h3>
+            <p class="text-sm text-stone-500 leading-relaxed">A finite sequence of symbols from Σ. The <strong>empty string (ε)</strong> has length zero.</p>
+          </div>
+          <div class="def-card bg-white rounded-2xl p-6 border border-outline-variant/20 shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined text-tertiary" style="font-size:20px">language</span>
+            </div>
+            <h3 class="font-bold text-base mb-2">Language <span class="text-primary font-mono">(L)</span></h3>
+            <p class="text-sm text-stone-500 leading-relaxed">A set of strings over Σ. Can be finite or infinite, defined by specific rules or patterns.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Formal Definition -->
+      <section id="formal-definition" class="scroll-mt-24 reveal relative">
+        <div class="s-num">02</div>
+        <div class="flex items-center gap-3 mb-8">
+          <div class="h-1 w-10 bg-secondary rounded-full"></div>
+          <span class="text-xs font-bold text-secondary tracking-widest uppercase">Chapter Two</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-8 leading-tight">Formal Definition of<br>Regular Expressions</h2>
+        <div class="tilt-card bg-white p-10 rounded-3xl border border-outline-variant/20 shadow-sm" style="transform-style:preserve-3d">
+          <h4 class="text-xs font-bold text-primary uppercase tracking-widest mb-5 flex items-center gap-2">
+            <span class="material-symbols-outlined" style="font-size:16px">arrow_downward</span> Base Cases
+          </h4>
+          <div class="grid md:grid-cols-3 gap-3 mb-8">
+            <div class="p-4 bg-surface-container-low rounded-xl text-sm"><code>∅</code> — the empty set.</div>
+            <div class="p-4 bg-surface-container-low rounded-xl text-sm"><code>ε</code> — language {ε}.</div>
+            <div class="p-4 bg-surface-container-low rounded-xl text-sm"><code>a</code> for any a ∈ Σ.</div>
+          </div>
+          <h4 class="text-xs font-bold text-secondary uppercase tracking-widest mb-5 flex items-center gap-2">
+            <span class="material-symbols-outlined" style="font-size:16px">dynamic_form</span> Inductive Steps
+          </h4>
+          <ul class="space-y-3">
+            <li class="flex gap-4 p-4 rounded-2xl hover:bg-surface-container-low transition-colors group">
+              <span class="bg-primary-container text-primary h-9 w-9 rounded-full flex items-center justify-center font-bold shrink-0 text-sm group-hover:scale-110 transition-transform">∪</span>
+              <div class="text-sm"><strong>Union:</strong> If R, S are REs then <code>R | S</code> represents <code>L(R) ∪ L(S)</code>.</div>
+            </li>
+            <li class="flex gap-4 p-4 rounded-2xl hover:bg-surface-container-low transition-colors group">
+              <span class="bg-secondary-container text-on-secondary-container h-9 w-9 rounded-full flex items-center justify-center font-bold shrink-0 text-sm group-hover:scale-110 transition-transform">·</span>
+              <div class="text-sm"><strong>Concatenation:</strong> If R, S are REs then <code>RS</code> represents <code>L(R)L(S)</code>.</div>
+            </li>
+            <li class="flex gap-4 p-4 rounded-2xl hover:bg-surface-container-low transition-colors group">
+              <span class="bg-tertiary-container text-on-tertiary-container h-9 w-9 rounded-full flex items-center justify-center font-bold shrink-0 text-sm group-hover:scale-110 transition-transform">*</span>
+              <div class="text-sm"><strong>Kleene Star:</strong> If R is a RE then <code>R*</code> — zero or more repetitions of R.</div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 3. Finite Automata -->
+      <section id="finite-automata" class="scroll-mt-24 reveal relative">
+        <div class="s-num">03</div>
+        <div class="flex items-center gap-3 mb-8">
+          <div class="h-1 w-10 bg-tertiary rounded-full"></div>
+          <span class="text-xs font-bold text-tertiary tracking-widest uppercase">Chapter Three</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-8 leading-tight">Finite Automata:<br>The Computational Model</h2>
+        <div class="grid md:grid-cols-2 gap-5">
+          <div class="tilt-card bg-stone-900 text-white p-8 rounded-3xl shadow-xl" style="transform-style:preserve-3d">
+            <div class="flex items-center gap-3 mb-5">
+              <span class="material-symbols-outlined" style="font-size:20px;color:#ffb68e">schema</span>
+              <h3 class="text-lg font-bold">Deterministic (DFA)</h3>
+            </div>
+            <p class="text-stone-400 text-sm mb-5">5-tuple <code style="background:rgba(255,255,255,.1);color:#ffb68e">M = (Q, Σ, δ, q0, F)</code>:</p>
+            <ul class="space-y-2 text-sm">
+              <li class="flex gap-3 items-center"><code style="background:rgba(255,255,255,.1);color:#ffb68e">Q</code><span class="text-stone-300">Finite set of states</span></li>
+              <li class="flex gap-3 items-center"><code style="background:rgba(255,255,255,.1);color:#ffb68e">Σ</code><span class="text-stone-300">Finite alphabet</span></li>
+              <li class="flex gap-3 items-center"><code style="background:rgba(255,255,255,.1);color:#ffb68e">δ</code><span class="text-stone-300">Transition function (Q × Σ → Q)</span></li>
+              <li class="flex gap-3 items-center"><code style="background:rgba(255,255,255,.1);color:#ffb68e">q0</code><span class="text-stone-300">Start state</span></li>
+              <li class="flex gap-3 items-center"><code style="background:rgba(255,255,255,.1);color:#ffb68e">F</code><span class="text-stone-300">Final/accepting states (F ⊆ Q)</span></li>
+            </ul>
+          </div>
+          <div class="tilt-card bg-surface-container-high p-8 rounded-3xl" style="transform-style:preserve-3d">
+            <div class="flex items-center gap-3 mb-5">
+              <span class="material-symbols-outlined text-secondary" style="font-size:20px">alt_route</span>
+              <h3 class="text-lg font-bold">Nondeterministic (NFA)</h3>
+            </div>
+            <p class="text-stone-500 text-sm mb-6">Allows multiple transitions and <strong>ε-transitions</strong> — spontaneous moves without consuming input.</p>
+            <div class="flex justify-center mt-6">
+              <div class="flex gap-4 items-center">
+                <div class="h-12 w-12 rounded-full border-2 border-secondary flex items-center justify-center text-xs font-bold shadow">q₀</div>
+                <div class="relative w-14 h-px bg-secondary">
+                  <span class="absolute -top-5 left-1/2 -translate-x-1/2 text-xs font-bold text-secondary">ε</span>
+                  <div class="absolute right-0 -top-1 w-2 h-2 bg-secondary rounded-full"></div>
+                </div>
+                <div class="h-12 w-12 rounded-full border-4 border-double border-secondary flex items-center justify-center text-xs font-bold shadow">q₁</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Kleene's Theorem -->
+      <section id="kleenes-theorem" class="scroll-mt-24 reveal relative">
+        <div class="s-num">04</div>
+        <div class="flex items-center gap-3 mb-8">
+          <div class="h-1 w-10 bg-primary rounded-full"></div>
+          <span class="text-xs font-bold text-primary tracking-widest uppercase">Chapter Four</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-8 leading-tight">Kleene's Theorem</h2>
+        <div class="theorem relative p-10 rounded-3xl bg-primary-container/30 border-l-8 border-primary overflow-hidden">
+          <p class="text-xl font-semibold leading-relaxed relative z-10">
+            "A language is regular if and only if it is recognized by a finite automaton."
+          </p>
+          <p class="mt-6 text-stone-500 text-sm leading-relaxed relative z-10">
+            This theorem establishes the functional equivalence between <strong>Regular Expressions</strong> and <strong>Finite Automata</strong>. It allows conversion between representations without losing expressive capability.
+          </p>
+        </div>
+      </section>
+
+      <!-- 5. Equivalence -->
+      <section id="equivalence" class="scroll-mt-24 reveal relative">
+        <div class="s-num">05</div>
+        <div class="flex items-center gap-3 mb-8">
+          <div class="h-1 w-10 bg-secondary rounded-full"></div>
+          <span class="text-xs font-bold text-secondary tracking-widest uppercase">Chapter Five</span>
+        </div>
+        <h2 class="text-4xl font-bold mb-4 leading-tight">Mathematics of<br>Equivalence Verification</h2>
+        <p class="text-base text-stone-500 mb-10 leading-relaxed">A rigorous four-step pipeline to prove two Regular Expressions define the same language:</p>
+        <div class="space-y-4">
+          <div class="step-card reveal flex gap-5 p-6 rounded-2xl bg-white border border-outline-variant/20 shadow-sm group hover:border-primary/30">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
+              <span class="text-lg font-black text-primary">01</span>
+            </div>
+            <div><h3 class="font-bold text-base mb-1">Thompson's Construction</h3><p class="text-sm text-stone-500 leading-relaxed">Syntactically parsing the RE to build an NFA with ε-transitions. Each RE operator maps to a specific structural template.</p></div>
+          </div>
+          <div class="step-card reveal flex gap-5 p-6 rounded-2xl bg-white border border-outline-variant/20 shadow-sm group hover:border-secondary/30">
+            <div class="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors shrink-0">
+              <span class="text-lg font-black text-secondary">02</span>
+            </div>
+            <div><h3 class="font-bold text-base mb-1">Subset Construction</h3><p class="text-sm text-stone-500 leading-relaxed">Converting the NFA into a DFA by computing ε-closures. Eliminates nondeterminism by representing NFA state sets as single DFA states.</p></div>
+          </div>
+          <div class="step-card reveal flex gap-5 p-6 rounded-2xl bg-white border border-outline-variant/20 shadow-sm group hover:border-tertiary/30">
+            <div class="w-14 h-14 rounded-2xl bg-tertiary/10 flex items-center justify-center group-hover:bg-tertiary/20 transition-colors shrink-0">
+              <span class="text-lg font-black text-tertiary">03</span>
+            </div>
+            <div><h3 class="font-bold text-base mb-1">Hopcroft's Algorithm</h3><p class="text-sm text-stone-500 leading-relaxed">Minimizing the DFA to canonical form. Partitions states into equivalence classes, merging indistinguishable ones.</p></div>
+          </div>
+          <div class="step-card reveal flex gap-5 p-6 rounded-2xl bg-white border border-outline-variant/20 shadow-sm group hover:border-primary/30">
+            <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
+              <span class="text-lg font-black text-primary">04</span>
+            </div>
+            <div><h3 class="font-bold text-base mb-1">Structural Isomorphism</h3><p class="text-sm text-stone-500 leading-relaxed">Comparing two minimal DFAs. If a bijection exists between their states and transitions, the expressions are equivalent.</p></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ─── STICKY SIDEBAR ──────────────── -->
+    <aside class="hidden xl:block w-72 sticky top-24 space-y-5">
+      <div class="glass rounded-2xl p-5">
+        <h4 class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-4">In This Module</h4>
+        <nav class="space-y-1" id="toc">
+          <a href="#preliminaries" class="toc-a flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:text-primary hover:bg-primary/5 transition-all">
+            <span class="toc-dot w-1.5 h-1.5 rounded-full bg-stone-300 shrink-0 transition-colors"></span>Alphabets &amp; Strings
+          </a>
+          <a href="#formal-definition" class="toc-a flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:text-primary hover:bg-primary/5 transition-all">
+            <span class="toc-dot w-1.5 h-1.5 rounded-full bg-stone-300 shrink-0 transition-colors"></span>Formal Definition
+          </a>
+          <a href="#finite-automata" class="toc-a flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:text-primary hover:bg-primary/5 transition-all">
+            <span class="toc-dot w-1.5 h-1.5 rounded-full bg-stone-300 shrink-0 transition-colors"></span>Finite Automata
+          </a>
+          <a href="#kleenes-theorem" class="toc-a flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:text-primary hover:bg-primary/5 transition-all">
+            <span class="toc-dot w-1.5 h-1.5 rounded-full bg-stone-300 shrink-0 transition-colors"></span>Kleene's Theorem
+          </a>
+          <a href="#equivalence" class="toc-a flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-stone-500 hover:text-primary hover:bg-primary/5 transition-all">
+            <span class="toc-dot w-1.5 h-1.5 rounded-full bg-stone-300 shrink-0 transition-colors"></span>Equivalence Verification
+          </a>
+        </nav>
+      </div>
+      <div class="glass rounded-2xl p-5">
+        <div class="flex justify-between items-center mb-3">
+          <h4 class="text-xs font-bold text-stone-400 uppercase tracking-widest">Progress</h4>
+          <span class="text-xs font-bold text-primary" id="pct">0%</span>
+        </div>
+        <div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+          <div id="sbprog" class="h-full rounded-full transition-all duration-200" style="width:0%;background:linear-gradient(to right,#9b4500,#ffb68e)"></div>
+        </div>
+        <p class="mt-2 text-xs text-stone-400 font-medium">Module 1.0 — Foundations</p>
+      </div>
+      <div class="glass rounded-2xl p-5">
+        <h4 class="text-xs font-bold text-stone-400 uppercase tracking-widest mb-4">Key Terms</h4>
+        <ul class="space-y-4">
+          <li><span class="block font-bold text-primary text-sm">ε-closure</span><span class="text-xs text-stone-500">All states reachable through ε-transitions.</span></li>
+          <li><span class="block font-bold text-primary text-sm">Canonical Form</span><span class="text-xs text-stone-500">Unique, minimal representation of a mathematical object.</span></li>
+          <li><span class="block font-bold text-primary text-sm">Isomorphism</span><span class="text-xs text-stone-500">Structure-preserving bijection between two objects.</span></li>
+        </ul>
+      </div>
+      <div class="glass rounded-2xl p-5 relative overflow-hidden">
+        <div style="position:absolute;right:-12px;top:-12px;width:80px;height:80px;border-radius:50%;background:rgba(112,93,0,.12);filter:blur(24px)"></div>
+        <div class="flex items-start gap-3 relative">
+          <span class="material-symbols-outlined text-tertiary shrink-0 mt-0.5" style="font-size:18px">lightbulb</span>
+          <div>
+            <h4 class="font-bold text-sm mb-1">Pumping Lemma</h4>
+            <p class="text-xs text-stone-500 leading-relaxed">To prove a language is <strong>not</strong> regular, use the Pumping Lemma — exploiting the Pigeonhole Principle.</p>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <a href="regex.html" class="flex items-center justify-between p-4 rounded-2xl bg-primary text-white hover:bg-primary/90 transition-all group shadow hover:shadow-md hover:-translate-y-0.5">
+          <span class="font-semibold text-sm">Try Regex Builder</span>
+          <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" style="font-size:18px">arrow_forward</span>
+        </a>
+        <a href="equivalncechecker.html" class="flex items-center justify-between p-4 rounded-2xl bg-surface-container border border-outline-variant/20 hover:border-primary/30 hover:-translate-y-0.5 transition-all group">
+          <span class="font-semibold text-sm">Check Equivalence</span>
+          <span class="material-symbols-outlined text-stone-400 group-hover:text-primary group-hover:translate-x-1 transition-all" style="font-size:18px">arrow_forward</span>
+        </a>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- ─── FOOTER ──────────────────────────────────────── -->
+<footer class="border-t border-outline-variant/20 py-14 mt-16" style="background:#f9f3ec">
+  <div class="max-w-screen-2xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+    <div>
+      <div class="text-2xl font-bold text-primary/40 tracking-tight">MathLab</div>
+      <p class="text-xs text-stone-400 mt-1">Theoretical Foundations of Regular Languages</p>
+    </div>
+    <div class="flex gap-8 text-stone-400 text-sm">
+      <a class="ul-hover hover:text-primary transition-colors" href="index.html">Documentation</a>
+      <a class="ul-hover hover:text-primary transition-colors" href="regex.html">Laboratory</a>
+      <a class="ul-hover hover:text-primary transition-colors" href="equivalncechecker.html">Equivalence</a>
+    </div>
+    <div class="text-stone-400 text-xs">© 2024 MathLab Education</div>
+  </div>
+</footer>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+document.addEventListener("DOMContentLoaded", () => {
+
+  // CURSOR
+  const dot = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-outline');
+  let mx=0,my=0,ox=0,oy=0;
+  window.addEventListener('mousemove', e => {
+    if (!parseFloat(dot.style.opacity)) { dot.style.opacity = ring.style.opacity = 1; ox=e.clientX; oy=e.clientY; }
+    mx=e.clientX; my=e.clientY; dot.style.left=mx+'px'; dot.style.top=my+'px';
+  });
+  gsap.ticker.add(() => {
+    ox+=(mx-ox)*.15; oy+=(my-oy)*.15;
+    ring.style.left=ox+'px'; ring.style.top=oy+'px';
+  });
+  document.querySelectorAll('a,button,input').forEach(el => {
+    el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+    el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+  });
+
+  // HEADER SCROLL
+  const hdr = document.getElementById('hdr');
+  window.addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 40));
+
+  // READING PROGRESS
+  const rp = document.getElementById('rdprog');
+  const sbp = document.getElementById('sbprog');
+  const pct = document.getElementById('pct');
+  window.addEventListener('scroll', () => {
+    const p = Math.min(100, (scrollY / (document.body.scrollHeight - innerHeight)) * 100);
+    rp.style.width = p + '%';
+    if (sbp) { sbp.style.width = p + '%'; pct.textContent = Math.round(p) + '%'; }
+  });
+
+  // BG MARQUEE
+  gsap.to('.bg-marquee', { xPercent: -30, ease: "sine.inOut", duration: 30, repeat: -1, yoyo: true });
+
+  // SCROLL REVEALS
+  document.querySelectorAll('.reveal').forEach(el => {
+    gsap.fromTo(el, { y: 55, opacity: 0 }, {
+      y: 0, opacity: 1, duration: 0.85, ease: "power3.out",
+      scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none none" }
+    });
+  });
+
+  // STAT COUNTERS
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const target = parseInt(el.dataset.count);
+    if (isNaN(target)) return;
+    gsap.fromTo(el, { textContent: 0 }, {
+      textContent: target, duration: 1.5, ease: "power2.out",
+      snap: { textContent: 1 },
+      scrollTrigger: { trigger: el, start: "top 92%" }
+    });
+  });
+
+  // TILT CARDS
+  document.querySelectorAll('.tilt-card').forEach(card => {
+    card.style.transformStyle = 'preserve-3d';
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left - r.width/2) / (r.width/2);
+      const y = (e.clientY - r.top - r.height/2) / (r.height/2);
+      gsap.to(card, { rotateX: y * -8, rotateY: x * 8, transformPerspective: 1000, duration: 0.4, ease: "power2.out" });
+    });
+    card.addEventListener('mouseleave', () => gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.7, ease: "power2.out" }));
+  });
+
+  // HERO 3D TILT
+  const hero3d = document.querySelector('.hero-3d-tilt');
+  if (hero3d) {
+    const wrap = hero3d.parentElement;
+    wrap.addEventListener('mousemove', e => {
+      const r = wrap.getBoundingClientRect();
+      const x = (e.clientX - r.left - r.width / 2) / (r.width / 2);
+      const y = (e.clientY - r.top - r.height / 2) / (r.height / 2);
+      gsap.to(hero3d, { rotateX: -16 - y * 6, rotateY: 24 + x * 8, duration: 0.55, ease: "sine.out" });
+    });
+    wrap.addEventListener('mouseleave', () => {
+      gsap.to(hero3d, { rotateX: -16, rotateY: 24, duration: 1.1, ease: "sine.inOut" });
+    });
+  }
+
+  // TOC ACTIVE
+  const sections = document.querySelectorAll('section[id]');
+  const tocAs = document.querySelectorAll('.toc-a');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        tocAs.forEach(a => { a.classList.remove('active'); a.querySelector('.toc-dot').style.background = ''; });
+        const active = document.querySelector(`.toc-a[href="#${e.target.id}"]`);
+        if (active) { active.classList.add('active'); active.querySelector('.toc-dot').style.background = '#9b4500'; }
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => obs.observe(s));
+});
+</script>
+</body>
+</html>
